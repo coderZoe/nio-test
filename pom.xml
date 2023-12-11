@@ -11,6 +11,7 @@
     <modules>
         <module>http-client-test1</module>
         <module>http-client-test2</module>
+        <module>web-flux-demo</module>
     </modules>
 
     <properties>
@@ -19,4 +20,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>2.7.18</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>
