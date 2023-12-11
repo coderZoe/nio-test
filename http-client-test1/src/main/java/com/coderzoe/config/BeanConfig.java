@@ -65,26 +65,4 @@ public class BeanConfig {
             return next.exchange(request).timeout(timeout);
         };
     }
-
-    // 过滤器函数，检查是否设置了超时，如果没有，则应用默认超时
-    public ExchangeFilterFunction timeoutFilter(Duration defaultTimeout) {
-        return new ExchangeFilterFunction() {
-            @Override
-            public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-                Mono<ClientResponse> responseMono = Mono.deferContextual(Mono::just)
-                        .flatMap(context -> {
-                            Optional<Duration> timeout = context.getOrEmpty(DEFAULT_TIMEOUT_ATTRIBUTE);
-                            return next.exchange(request)
-                                    .timeout(timeout.orElse(defaultTimeout));
-                        });
-
-                return responseMono.contextWrite(ctx -> {
-                    if (!request.attribute(DEFAULT_TIMEOUT_ATTRIBUTE).isPresent()) {
-                        return ctx.put(DEFAULT_TIMEOUT_ATTRIBUTE, defaultTimeout);
-                    }
-                    return ctx;
-                });
-            }
-        };
-    }
 }

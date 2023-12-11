@@ -82,6 +82,7 @@ public class Test1Controller {
 
     @GetMapping("/flux2")
     public Mono<Person> flux2(){
+        System.out.println(Thread.currentThread().toString());
         Person person = new Person("小明",18,"翻斗花园");
         return webClient.post().uri(TEST2_FLUX_URL)
                 .header("X-USER-ID","aaabbbccc")
