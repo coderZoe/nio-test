@@ -123,7 +123,7 @@ public class Test1Controller {
     @GetMapping("/flux/subscribe2")
     public void fluxSubscribe2() {
         webClient.post().uri(TEST2_URL)
-                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
+//                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
                 .retrieve()
                 .bodyToMono(String.class)
                 .publishOn(Schedulers.fromExecutor(EXECUTOR_SERVICE))

@@ -48,11 +48,11 @@ public class BeanConfig {
 
     @Bean
     public WebClient webClient() {
+        HttpClient httpClient = HttpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .responseTimeout(Duration.ofSeconds(20));
         return WebClient.builder()
-                .filter(timeoutFilter())
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .filter(exceptionFilter())
-                .filter(logRequestFilter())
-                .filter(logResponseFilter())
                 .build();
     }
 
