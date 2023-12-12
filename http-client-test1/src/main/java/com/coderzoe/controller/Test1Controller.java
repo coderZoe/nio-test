@@ -41,7 +41,7 @@ public class Test1Controller {
     public String test() throws ExecutionException, InterruptedException {
         Response response = asyncHttpClient.preparePost(TEST2_URL)
                 .execute().get();
-        if(response.getStatusCode() == 200){
+        if (response.getStatusCode() == 200) {
             return response.getResponseBody();
         }
         return null;
@@ -69,38 +69,38 @@ public class Test1Controller {
                 .setReadTimeout(20000)
                 .execute()
                 .toCompletableFuture();
-        CompletableFuture.allOf(completableFuture1,completableFuture2).join();
+        CompletableFuture.allOf(completableFuture1, completableFuture2).join();
         Response response1 = completableFuture1.get();
         Response response2 = completableFuture2.get();
-        handle(response1.getResponseBody(),response2.getResponseBody());
+        handle(response1.getResponseBody(), response2.getResponseBody());
     }
 
     @GetMapping("/flux")
-    public Mono<String> flux(){
+    public Mono<String> flux() {
         return webClient.post().uri(TEST2_URL)
-                .attribute(WebClientAttributes.TIMEOUT,Duration.ofSeconds(20))
+                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
                 .retrieve()
                 .bodyToMono(String.class);
     }
 
     @GetMapping("/flux2")
-    public Mono<Person> flux2(){
+    public Mono<Person> flux2() {
         System.out.println(Thread.currentThread().toString());
-        Person person = new Person("小明",18,"翻斗花园");
+        Person person = new Person("小明", 18, "翻斗花园");
         return webClient.post().uri(TEST2_FLUX_URL)
-                .header("X-USER-ID","aaabbbccc")
-                .attribute(WebClientAttributes.TIMEOUT,Duration.ofSeconds(20))
+                .header("X-USER-ID", "aaabbbccc")
+                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
                 .bodyValue(person)
                 .retrieve()
                 .bodyToMono(Person.class);
     }
 
     @GetMapping("/flux/sync")
-    public Person fluxSync(){
-        Person person = new Person("小明",18,"翻斗花园");
+    public Person fluxSync() {
+        Person person = new Person("小明", 18, "翻斗花园");
         return webClient.post().uri(TEST2_FLUX_URL)
-                .header("X-USER-ID","aaabbbccc")
-                .attribute(WebClientAttributes.TIMEOUT,Duration.ofSeconds(20))
+                .header("X-USER-ID", "aaabbbccc")
+                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
                 .bodyValue(person)
                 .retrieve()
                 .bodyToMono(Person.class)
@@ -108,21 +108,22 @@ public class Test1Controller {
     }
 
     @GetMapping("/flux/subscribe")
-    public void fluxSubscribe(){
+    public void fluxSubscribe() {
         webClient.post().uri(TEST2_URL)
-                .attribute(WebClientAttributes.TIMEOUT,Duration.ofSeconds(20))
+                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
                 .retrieve()
                 .bodyToMono(String.class)
                 .publishOn(Schedulers.fromExecutor(EXECUTOR_SERVICE))
                 .subscribe(
-                        str -> System.out.println("当前线程"+Thread.currentThread().getName()+"，收到的响应："+str),
-                        error -> System.out.println("当前线程"+Thread.currentThread().getName()+"，请求失败，失败原因："+error.getMessage())
+                        str -> System.out.println("当前线程" + Thread.currentThread().getName() + "，收到的响应：" + str),
+                        error -> System.out.println("当前线程" + Thread.currentThread().getName() + "，请求失败，失败原因：" + error.getMessage())
                 );
     }
 
     @GetMapping("/flux/subscribe2")
-    public void fluxSubscribe2(){
-       webClient.post().uri(TEST2_URL)
+    public void fluxSubscribe2() {
+        webClient.post().uri(TEST2_URL)
+                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
                 .retrieve()
                 .bodyToMono(String.class)
                 .publishOn(Schedulers.fromExecutor(EXECUTOR_SERVICE))
@@ -132,7 +133,7 @@ public class Test1Controller {
     }
 
     @GetMapping("/flux/parallel")
-    public void fluxParallel(){
+    public void fluxParallel() {
         Mono<String> mono2 = webClient.post().uri(TEST2_URL)
                 .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
                 .retrieve()
@@ -141,24 +142,25 @@ public class Test1Controller {
                 .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
                 .retrieve()
                 .bodyToMono(String.class);
-        Mono.zip(mono2,mono3)
+        Mono.zip(mono2, mono3)
                 .publishOn(Schedulers.fromExecutor(EXECUTOR_SERVICE))
-                .subscribe(tuple ->{
+                .subscribe(tuple -> {
                     String result2 = tuple.getT1();
                     String result3 = tuple.getT2();
-                    handle(result2,result3);
+                    handle(result2, result3);
                 });
     }
 
-    private void handle(String response2,String response3){
-        System.out.println("response2:"+response2);
-        System.out.println("response3:"+response3);
+    private void handle(String response2, String response3) {
+        System.out.println("response2:" + response2);
+        System.out.println("response3:" + response3);
     }
 
     @Autowired
     public void setAsyncHttpClient(AsyncHttpClient asyncHttpClient) {
         this.asyncHttpClient = asyncHttpClient;
     }
+
     @Autowired
     public void setWebClient(WebClient webClient) {
         this.webClient = webClient;

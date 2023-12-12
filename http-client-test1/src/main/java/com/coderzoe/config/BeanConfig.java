@@ -48,38 +48,35 @@ public class BeanConfig {
 
     @Bean
     public WebClient webClient() {
-        HttpClient httpClient = HttpClient.create()
-                .responseTimeout(Duration.ofSeconds(3));
         return WebClient.builder()
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .filter(timeoutException())
+                .filter(timeoutFilter())
+                .filter(exceptionFilter())
                 .filter(logRequestFilter())
                 .filter(logResponseFilter())
-                .filter(exceptionFilter())
                 .build();
     }
 
-    private ExchangeFilterFunction timeoutException(){
+    private ExchangeFilterFunction exceptionFilter() {
         return (request, next) -> {
-           return next.exchange(request)
-                   .doOnError(error ->{
-                log.error(request.url()+"请求超时");
-            });
+            return next.exchange(request)
+                    .doOnError(error -> {
+                        log.error(request.url() + "请求超时");
+                    });
         };
     }
 
     private ExchangeFilterFunction timeoutFilter() {
         return (request, next) -> {
             System.out.println(request.getClass());
-            Duration timeout= (Duration)(request.attribute(WebClientAttributes.TIMEOUT).orElse(null));
-            if(timeout == null){
+            Duration timeout = (Duration) (request.attribute(WebClientAttributes.TIMEOUT).orElse(null));
+            if (timeout == null) {
                 return next.exchange(request).timeout(Duration.ofSeconds(3));
             }
             return next.exchange(request).timeout(timeout);
         };
     }
 
-    private ExchangeFilterFunction logRequestFilter(){
+    private ExchangeFilterFunction logRequestFilter() {
         return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
             log.info("webClient request,method:{},url:{},headers:{},body:{}",
                     clientRequest.method(),
@@ -89,24 +86,10 @@ public class BeanConfig {
             return Mono.just(clientRequest);
         });
     }
-    private ExchangeFilterFunction logResponseFilter(){
-        return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
-            log.info("webClient response, status:{}",clientResponse.statusCode());
-            return Mono.just(clientResponse);
-        });
-    }
 
-    private ExchangeFilterFunction exceptionFilter(){
+    private ExchangeFilterFunction logResponseFilter() {
         return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
-            // 检查响应是否表示错误（例如，4xx和5xx状态码）
-            if (clientResponse.statusCode().isError()) {
-                return clientResponse.bodyToMono(String.class)
-                        .flatMap(errorBody -> {
-                            // 处理错误响应体，可能抛出自定义异常
-                            log.error("webclient request error:{}",errorBody);
-                            return Mono.error(new RuntimeException("Error response received"));
-                        });
-            }
+            log.info("webClient response, status:{}", clientResponse.statusCode());
             return Mono.just(clientResponse);
         });
     }
