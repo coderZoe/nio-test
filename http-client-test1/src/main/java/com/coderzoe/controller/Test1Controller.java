@@ -12,11 +12,15 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.client.HttpClientRequest;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+
+import static com.coderzoe.constants.WebClientAttributes.EXECUTOR_SERVICE;
 
 /**
  * @author yinhuasheng
@@ -27,7 +31,6 @@ import java.util.concurrent.ExecutionException;
 @RequestMapping("/test1")
 
 public class Test1Controller {
-    private RestTemplate restTemplate;
     private AsyncHttpClient asyncHttpClient;
     private WebClient webClient;
     public static final String TEST2_URL = "http://localhost:8082/test2";
@@ -104,25 +107,54 @@ public class Test1Controller {
                 .block();
     }
 
-    @GetMapping("/flux3")
-    public Mono<String> flux3(){
-        return webClient.post().uri(TEST2_URL)
-                .httpRequest(httpRequest -> {
-                    HttpClientRequest reactorRequest = httpRequest.getNativeRequest();
-                    reactorRequest.responseTimeout(Duration.ofSeconds(20));
-                })
+    @GetMapping("/flux/subscribe")
+    public void fluxSubscribe(){
+        webClient.post().uri(TEST2_URL)
+                .attribute(WebClientAttributes.TIMEOUT,Duration.ofSeconds(20))
+                .retrieve()
+                .bodyToMono(String.class)
+                .publishOn(Schedulers.fromExecutor(EXECUTOR_SERVICE))
+                .subscribe(
+                        str -> System.out.println("当前线程"+Thread.currentThread().getName()+"，收到的响应："+str),
+                        error -> System.out.println("当前线程"+Thread.currentThread().getName()+"，请求失败，失败原因："+error.getMessage())
+                );
+    }
+
+    @GetMapping("/flux/subscribe2")
+    public void fluxSubscribe2(){
+       webClient.post().uri(TEST2_URL)
+                .retrieve()
+                .bodyToMono(String.class)
+                .publishOn(Schedulers.fromExecutor(EXECUTOR_SERVICE))
+                .doOnSuccess(str -> System.out.println("当前线程" + Thread.currentThread().getName() + "，收到的响应：" + str))
+                .doOnError(error -> System.out.println("当前线程" + Thread.currentThread().getName() + "，请求失败，失败原因：" + error.getMessage()))
+                .subscribe();
+    }
+
+    @GetMapping("/flux/parallel")
+    public void fluxParallel(){
+        Mono<String> mono2 = webClient.post().uri(TEST2_URL)
+                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
                 .retrieve()
                 .bodyToMono(String.class);
+        Mono<String> mono3 = webClient.post().uri(TEST3_URL)
+                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
+                .retrieve()
+                .bodyToMono(String.class);
+        Mono.zip(mono2,mono3)
+                .publishOn(Schedulers.fromExecutor(EXECUTOR_SERVICE))
+                .subscribe(tuple ->{
+                    String result2 = tuple.getT1();
+                    String result3 = tuple.getT2();
+                    handle(result2,result3);
+                });
     }
 
     private void handle(String response2,String response3){
-
+        System.out.println("response2:"+response2);
+        System.out.println("response3:"+response3);
     }
 
-    @Autowired
-    public void setRestTemplate(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
     @Autowired
     public void setAsyncHttpClient(AsyncHttpClient asyncHttpClient) {
         this.asyncHttpClient = asyncHttpClient;

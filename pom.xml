@@ -12,6 +12,7 @@
         <module>http-client-test1</module>
         <module>http-client-test2</module>
         <module>web-flux-demo</module>
+        <module>http-client-test3</module>
     </modules>
 
     <properties>
