@@ -16,7 +16,7 @@ public class Test2Controller {
     @PostMapping
     public String test2() throws InterruptedException {
         Thread.sleep(15000);
-        throw new RuntimeException("555");
+        return "test2";
     }
 
     @PostMapping("/flux")

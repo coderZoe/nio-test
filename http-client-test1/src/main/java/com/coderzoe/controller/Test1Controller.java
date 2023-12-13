@@ -1,5 +1,6 @@
 package com.coderzoe.controller;
 
+import com.coderzoe.constants.JsonUtil;
 import com.coderzoe.constants.WebClientAttributes;
 import com.coderzoe.model.Person;
 import org.asynchttpclient.AsyncCompletionHandler;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static com.coderzoe.constants.WebClientAttributes.EXECUTOR_SERVICE;
 
@@ -149,6 +151,39 @@ public class Test1Controller {
                     String result3 = tuple.getT2();
                     handle(result2, result3);
                 });
+    }
+    @GetMapping("/flux/delay")
+    public void fluxDelay() {
+        Person person = new Person("小明", 18, "翻斗花园");
+        Mono.delay(Duration.ofMinutes(2))
+                .then(webClient.post().uri(TEST2_FLUX_URL)
+                        .header("X-USER-ID", "aaabbbccc")
+                        .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
+                        .bodyValue(person)
+                        .retrieve()
+                        .bodyToMono(Person.class))
+                .subscribe(
+                        person1 -> System.out.println("收到的响应：" + JsonUtil.toJsonString(person1)),
+                        error -> System.out.println("请求失败，失败原因：" + error.getMessage())
+                );
+    }
+
+    @GetMapping("/flux/sequence")
+    public void fluxSequence(){
+        webClient.post().uri(TEST2_URL)
+                .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
+                .retrieve()
+                .bodyToMono(String.class)
+                .flatMap(result -> {
+                    Person person = new Person(result, 18, "翻斗花园");
+                    return webClient.post().uri(TEST2_FLUX_URL)
+                            .header("X-USER-ID", "aaabbbccc")
+                            .attribute(WebClientAttributes.TIMEOUT, Duration.ofSeconds(20))
+                            .bodyValue(person)
+                            .retrieve()
+                            .bodyToMono(Person.class);
+                }).subscribe(person -> System.out.println("收到的响应：" + JsonUtil.toJsonString(person)),
+                        error -> System.out.println("请求失败，失败原因：" + error.getMessage()));
     }
 
     private void handle(String response2, String response3) {
