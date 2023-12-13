@@ -2,10 +2,6 @@ package com.coderzoe.config;
 
 import com.coderzoe.constants.JsonUtil;
 import com.coderzoe.constants.WebClientAttributes;
-import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutException;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig;
@@ -13,24 +9,12 @@ import org.asynchttpclient.Dsl;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.reactive.ClientHttpRequest;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.client.*;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.http.client.HttpClientRequest;
-
-import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * @author yinhuasheng
